@@ -19,38 +19,33 @@ int rotationAltitude = 0;
 int pupilGutter= 145 -eyeMinorRad; //gutter carriage to edge is 15 and 14.5  floor to 14.5
 float zoom = 2.05;
 
+
 ControlP5 cp5;
 boolean mouse = true;
 boolean bounce= false;
 boolean OSC;
-boolean eyesConected = false; //checked later on
+boolean eyesConected = true; //checked later on
 
 void setup() {
   size( displayWidth/2, displayWidth/2, P3D);
-  // initFirmata();
+  initFirmata();
   initControlPanel();
-  frameRate(60);
+  frameRate(24);
   smooth();
-  // ortho();
 }
 
 void draw() {
   background(60);
-
-// PVector eyePosition = 
-   camera(-width*zoom, -height*zoom, height*zoom , width, height, 0, 0, 1, 0);
-  
+  camera(-width*zoom, -height*zoom, height*zoom, width, height, 0, 0, 1, 0);
   noStroke();
-  int xCen = width/2;
-  int yCen= height/2;
   pushMatrix();
   // translate(width/2, height/2, zoom);//centers the rotation and the draw surface in the upper middle of the screen
   rotateY(radians(rotationHeading));
   rotateX(radians(rotationAltitude));
-   drawGumball();
+  drawGumball();
   //  eyeModel(0, 0, eyeRad, eyeMinorRad, pupilR, pupilThetaDegrees, pupilGutter);
-  PVector origin = new PVector(0,0,0);
-  PVector gap = new PVector(interOccular/2,0,0);
+  PVector origin = new PVector(0, 0, 0);
+  PVector gap = new PVector(interOccular/2, 0, 0);
   // println("gap: "+gap);
   PVector origin1, origin2;
   origin1 = origin.get();
@@ -58,35 +53,36 @@ void draw() {
   origin1.add(gap);
   origin2.sub(gap);
 
-findGazeDrawEye(origin1,planarMouse());
-findGazeDrawEye(origin2,planarMouse());
+  // findGazeDrawEye(origin1, planarMouse());
+  findGazeDrawEye(origin2,planarMouse());
 
-planarMouse();
+  planarMouse();
   // eyeModel( origin.add(gap),  pupilR, pupilThetaDegrees, pupilGutter);
   popMatrix();
-    camera();
+  camera();
   cp5.draw();
 
-// //  cp5.draw();//draw the sliders
-//   if (mouse) {
-//     simpleMouseXYControl();
-//   }
-//   else if (bounce) {
-//     sinuasoidalBounce();
-//   }
-//   else if (OSC) {
-//     //osc
-//   }
+  // //  cp5.draw();//draw the sliders
+  //   if (mouse) {
+  //     simpleMouseXYControl();
+  //   }
+  //   else if (bounce) {
+  //     sinuasoidalBounce();
+  //   }
+  //   else if (OSC) {
+  //     //osc
+  //   }
 }
 
 void initFirmata() {
   //ToDo: Dif between left and right eye
   int arduinoIndex = 5;
   println(Arduino.list());
-  if(Arduino.list().length > 4){
-  eyesConected = true;
-  arduino = new Arduino(this, Arduino.list()[arduinoIndex], 57600);
-}
+  if (Arduino.list().length > 4) {
+    eyesConected = true;
+    println("Found first arduino");
+    arduino = new Arduino(this, Arduino.list()[arduinoIndex], 57600);
+  }
 }
 void initControlPanel() {
   cp5 = new ControlP5(this);
@@ -126,11 +122,12 @@ void initControlPanel() {
 
 void sinuasoidalBounce() {
   float sinuasoid = sin(radians(frameCount%360));
-//  int discreteRotaryGoal  = int(map(sinuasoid, -1, 1, 0, 16));
+  //  int discreteRotaryGoal  = int(map(sinuasoid, -1, 1, 0, 16));
   // constrain(sinuasoid,-1,1);
   int pupilR= int(map(sinuasoid, -1, 1, -255, 255));
-  //  pupilThetaDegrees = int(map(sinuasoid, -1, 1, 0, 360));
-  moveEye(11, 11);
+   int pupilThetaDegrees = int(map(sinuasoid, -1, 1, 0, 360));
+  moveEye(pupilThetaDegrees, pupilR);
+
 }
 
 
@@ -142,22 +139,25 @@ void moveEye(int thetaGoal, int pupilRGoal) {
   //Rotation: 0 to 360 CCW with zero at 3:00. 
   //linear: 0 to 360 with 180 being home
 
-  int pupilRArduino = int(map(pupilRGoal, -255, 255, 0, 360));
-     pupilRArduino = 360;
-
-
-  //  int discreteRotaryGoal = (int(map(mouseY,0,height,0,16))+6)%16;
-   int discreteRotaryGoal = (int(map(thetaGoal,0,360,0,16)));
+    int pupilRArduino = int(map(pupilRGoal, -255, 255, 0, 360));
+    pupilRArduino=constrain(pupilRArduino, 0, 360);
+  // pupilRArduino = 360;
+  int discreteRotaryGoal = (int(map(thetaGoal, 0, 360, 0, 16)));
   discreteRotaryGoal = (discreteRotaryGoal+6)%16;
-if (debug) {
-  
-  print("pulilR: ", pupilRGoal);
-  print("\tthetaGoal: ", thetaGoal);
-  println("\tdiscreteRotaryGoal: ", discreteRotaryGoal);
-}
+  if (debug) {
+    print("pupilRArduino: ", pupilRArduino);
+    print("\tthetaGoal: ", thetaGoal);
+    println("\tdiscreteRotaryGoal: ", discreteRotaryGoal);
+  }
   if (eyesConected) {
-    arduino.analogWrite(2, pupilRArduino);
-    arduino.analogWrite(3, discreteRotaryGoal);
+    // int systemHz = int(frameRate);
+    int communicationPeriod = 3;
+    // if (frameCount%communicationPeriod == 0) {
+      //these arent really ananlog write commands, I am just using firmata to move the numbers
+      println("pupilRArduino: "+pupilRArduino);
+      arduino.analogWrite(2, pupilRArduino);
+      arduino.analogWrite(3, discreteRotaryGoal);
+    // }
   }
 }
 
@@ -177,38 +177,46 @@ void drawGumball() {
 
 
 
-void findGazeDrawEye(PVector origin, PVector target){
-  boolean debug = false;
+void findGazeDrawEye(PVector origin, PVector target) {
+  //determines, based on the location of the eye annd the location of the thing to be looked t
+  //the proper render/command to display/run the eye to
+  boolean debug = true;
   strokeWeight(1);
   strokeCap(ROUND);
   stroke(0, 255, 0); //x is red
-  PVector eyeNormal = new PVector(0,0,1);
-if(debug)line(origin.x,origin.y,origin.z,origin.x,origin.y,origin.z+400);
-stroke(255, 0, 0); //x is red
-if(debug)line(origin.x,origin.y,origin.z,target.x,target.y,target.z);
-PVector gazeVector = target.get();
-gazeVector.sub(origin);
-float gazeTheta = PVector.angleBetween(eyeNormal,gazeVector);
-if (gazeVector.x < 0){
-  gazeTheta = -gazeTheta;
-}
-// println("gazeTheta: "+degrees(gazeTheta));
-int pupilR = int(tan(gazeTheta)*255);
-// print("\tpupilR:\t"+pupilR);
-int thetaGoal = 0;
+  PVector eyeNormal = new PVector(0, 0, 1);
+  if (debug)line(origin.x, origin.y, origin.z, origin.x, origin.y, origin.z+400);
+  stroke(255, 0, 0); //x is red
+  if (debug)line(origin.x, origin.y, origin.z, target.x, target.y, target.z);
+  PVector gazeVector = target.get();
+  gazeVector.sub(origin);
+  float gazeTheta = PVector.angleBetween(eyeNormal, gazeVector);
+  if (gazeVector.x < 0) {
+    gazeTheta = -gazeTheta;
+  }
+  // println("gazeTheta: "+degrees(gazeTheta));
+  int pupilR = int(tan(gazeTheta)*255);
+  // print("\tpupilR:\t"+pupilR);
+  int thetaGoal = 0;
   // float gazeX;
   // float gazeY;
   // float gazeZ;
   // PVector gaze = new PVector(
+  float sinuasoid = sin(radians(frameCount%360));
+  //  int discreteRotaryGoal  = int(map(sinuasoid, -1, 1, 0, 16));
+  // constrain(sinuasoid,-1,1);
+    thetaGoal = int(map(sinuasoid, -1, 1, 0, 360));
+
   eyeModel(origin, pupilR, thetaGoal); 
+  moveEye(thetaGoal, pupilR);
   // return gaze;
 }
 
-PVector planarMouse(){
+PVector planarMouse() {
   //returns a target that is on the screen
   noCursor();
   noStroke();
-  fill(255,44);
+  fill(255, 44);
   // controllerOrigin
   // rect(width, width-100, 0, 400);
   pushMatrix();
@@ -221,40 +229,38 @@ PVector planarMouse(){
   strokeWeight(1);
   int stripePitch = 99;
   for (int xStripe = 0; xStripe <= planeWidth/stripePitch; ++xStripe) {
-    line(xStripe*stripePitch,0,xStripe*stripePitch,planeDepth);
-    
+    line(xStripe*stripePitch, 0, xStripe*stripePitch, planeDepth);
   }
-    for (int yStripe = 0; yStripe <= planeDepth/stripePitch; ++yStripe) {
-    line(0,yStripe*stripePitch,planeWidth,yStripe*stripePitch);
-    
+  for (int yStripe = 0; yStripe <= planeDepth/stripePitch; ++yStripe) {
+    line(0, yStripe*stripePitch, planeWidth, yStripe*stripePitch);
   }
   popMatrix();
-  stroke(255,0,255);//white
+  stroke(255, 0, 255);//white
   strokeWeight(40);
   strokeCap(ROUND);
-  PVector target = new PVector(map(mouseX,0,width,-planeWidth,planeWidth),0,map(mouseY,0,height,0,planeDepth*2));
-  point(target.x, target.y-20,target.z);//whte dot behind eye   
+  PVector target = new PVector(map(mouseX, 0, width, -planeWidth, planeWidth), 0, map(mouseY, 0, height, 0, planeDepth*2));
+  point(target.x, target.y-20, target.z);//whte dot behind eye   
   noStroke();
   return target;
 }
 
 void eyeModel(PVector origin, int pupilR, int pupilTheta) {
-// Displays a visual model of the eye with the specified params
+  // Displays a visual model of the eye with the specified params
 
-int xCen = int(origin.x);
- int yCen = int(origin.y);
- int zCen = int(origin.z);
+  int xCen = int(origin.x);
+  int yCen = int(origin.y);
+  int zCen = int(origin.z);
   int bigRad =eyeRad ;//46.5inch diam
   int smallRad = eyeMinorRad;//23.5 inches diam ////delete
   int trueMaximum = bigRad-smallRad-pupilGutter;
   float gutterLossCoeff = eyeRad/trueMaximum;
-    int max255 = int(gutterLossCoeff*255);
+  int max255 = int(gutterLossCoeff*255);
   pupilR = constrain(pupilR, -max255, max255); //can travel backwards, meaning not truly polar coords
   pupilTheta = constrain(pupilTheta, 0, 360);//Angular position of the pupil, CCW degrees from 3 o'clock
-  
+
   int pupilRPixels = int(map(pupilR, -255, 255, -eyeRad, eyeRad));
   pupilRPixels = constrain(pupilRPixels, -trueMaximum, trueMaximum);
- //whte dot behind eye 
+  //whte dot behind eye 
   stroke(255);//white
   strokeWeight(10);
   strokeCap(ROUND);

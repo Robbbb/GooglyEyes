@@ -24,7 +24,7 @@
 
 //   float pupilR01 = constrain(sqrt((newX*newX)+(newY*newY)), 0, 1);
 //   pupilR = int(map(pupilR01, 0, 1, 0, 360));
- 
+
 //   pupilThetaDegrees = -int(degrees(atan2(newY, newX)));
 //   //  pupilR= int(map(touchOSCxParam, 0, 1, -255, 255)) ;
 //   //  pupilThetaDegrees= int(map(touchOSCyParam, 0, 1, 0, 360)) ;
@@ -41,5 +41,4 @@
 //  //  thetaCommand.add(0.0);
 //  oscP5.send(thetaCommand, myRemoteLocation);
 //}
-
 
