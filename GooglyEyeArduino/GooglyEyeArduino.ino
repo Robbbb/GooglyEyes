@@ -87,7 +87,7 @@ void firmataFakeAnalogSetup()
   Firmata.begin(57600);
   Serial.println("\tFirmata Begun.");
   int imaginaryPinUsedToDifferentiateTheEyes = 0;
-  Firmata.sendAnalog(imaginaryPinUsedToDifferentiateTheEyes, isLeftEye)
+  Firmata.sendAnalog(imaginaryPinUsedToDifferentiateTheEyes, isLeftEye);
 }
 
 

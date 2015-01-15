@@ -103,7 +103,15 @@ public void initFirmata() {
     println("Found first arduino");
     arduino = new Arduino(this, Arduino.list()[arduinoIndex], 57600);
   }
+   int imaginaryPinUsedToDifferentiateTheEyes = 0;
+  // boolean isLeftEye;
+  int isLeftEye = 99;
+  //0 when right eye 1 when left eye
+   isLeftEye = arduino.analogRead(imaginaryPinUsedToDifferentiateTheEyes);
+println("isLeftEye: "+isLeftEye);
 }
+
+
 public void initControlPanel() {
   cp5 = new ControlP5(this);
   bounce = true;
@@ -174,7 +182,6 @@ public void moveEye(int thetaGoal, int pupilRGoal) {
     int communicationPeriod = 3;
     // if (frameCount%communicationPeriod == 0) {
       //these arent really ananlog write commands, I am just using firmata to move the numbers
-      println("pupilRArduino: "+pupilRArduino);
       arduino.analogWrite(2, pupilRArduino);
       arduino.analogWrite(3, discreteRotaryGoal);
     // }

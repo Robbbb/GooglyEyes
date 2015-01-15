@@ -3,8 +3,9 @@ import controlP5.*;
 // import netP5.*;
 import processing.serial.*;
 import cc.arduino.*;
-
-Arduino arduino;
+Arduino mysteryEye;
+Arduino leftEye;
+Arduino rightEye;
 // OscP5 oscP5;
 // NetAddress myRemoteLocation;
 
@@ -76,14 +77,36 @@ void draw() {
 
 void initFirmata() {
   //ToDo: Dif between left and right eye
-  int arduinoIndex = 5;
+  int baselineSerialPortConnections = 4;
+  int arduinoAIndex = baselineSerialPortConnections +2;
+  int arduinoBIndex = arduinoAIndex +2 ;
   println(Arduino.list());
-  if (Arduino.list().length > 4) {
-    eyesConected = true;
-    println("Found first arduino");
-    arduino = new Arduino(this, Arduino.list()[arduinoIndex], 57600);
-  }
+  if (Arduino.list().length > baselineSerialPortConnections){
+      println("Found arduino(s)!");
+      eyesConected = true;
+      mysteryEye = new Arduino(this, Arduino.list()[arduinoAIndex], 57600);
+
+      int imaginaryPinUsedToDifferentiateTheEyes = 0;
+      int isLeftEye = 99;//0 when right eye 1 when left eye
+      isLeftEye = mysteryEye.analogRead(imaginaryPinUsedToDifferentiateTheEyes);
+      // println("isLeftEye: "+isLeftEye);
+
+      if (isLeftEye==1)leftEye = mysteryEye;
+      else rightEye = mysteryEye;
+      if(Arduino.list().length > arduinoAIndex && isLeftEye==1){
+        rightEye = new Arduino(this, Arduino.list()[arduinoBIndex], 57600);
+      }
+      
+
+
+
+
+
+
+
 }
+
+
 void initControlPanel() {
   cp5 = new ControlP5(this);
   bounce = true;
@@ -154,7 +177,6 @@ void moveEye(int thetaGoal, int pupilRGoal) {
     int communicationPeriod = 3;
     // if (frameCount%communicationPeriod == 0) {
       //these arent really ananlog write commands, I am just using firmata to move the numbers
-      println("pupilRArduino: "+pupilRArduino);
       arduino.analogWrite(2, pupilRArduino);
       arduino.analogWrite(3, discreteRotaryGoal);
     // }
