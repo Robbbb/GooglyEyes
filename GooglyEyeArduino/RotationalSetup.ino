@@ -72,61 +72,28 @@ boolean spinTo(int target){
   }
 
   spinAt(fastestRotaryRoute);
-  //  if(fastestRotaryRoute<1){//neg numbers
-  //    spinCounterClockwise();
-  //  }
-  //  else if(fastestRotaryRoute>1){
-  //
-  //    spinClockwise();
-  //  }
 
-  //  int timeZero = millis();
-  //  while(hallArrayUpdate() == false){
-  //  }
-  // int timeOne = millis();
-  // int spinDuration = timeOne-timeZero;
-  // Serial.print("Spun once at: ");
-  // Serial.print(speed);
-  // Serial.print("\ttook: ");
-  // Serial.println(spinDuration);
-
-  //  Serial.print("\tposition: ");
-  //  Serial.print(lastKnownSpinPosition);
-  //  Serial.print("\ttarget: ");
-  //  Serial.print(target);
-  //  Serial.print("\troute: ");
-  //  Serial.println(fastestRotaryRoute);
   return false;
 }
 
 
 
-int rotaryStopMillis = 1500; //the pulse duration that stops the motor
-int rotarySpindesiredMagnitude = 1000;//the greatest allowed distance from stop
-int rotarySpinMaximumMagnitude = 500;//the greatest allowed distance from stop
+const int rotaryStopMillis = 1500; //the pulse duration that stops the motor
+// const int rotarySpinDesiredMagnitude = 1000;//the greatest allowed distance from stop
+const int rotarySpinDesiredMagnitude = 1250;//the greatest allowed distance from stop
+const int rotarySpinMaximumMagnitude = 500;//the greatest allowed distance from stop
 
-int rotaryDesiredSpeed = 200;
-int rotaryClockwiseMillis = rotaryStopMillis +rotaryDesiredSpeed;
-int rotaryCounterClockwiseMillis = rotaryStopMillis -rotaryDesiredSpeed;
+const int rotaryDesiredSpeed = 200;
+const int rotaryClockwiseMillis = rotaryStopMillis +rotaryDesiredSpeed;
+const int rotaryCounterClockwiseMillis = rotaryStopMillis -rotaryDesiredSpeed;
 
 void spinAt(int speed){
 
-  //  switch (speed) {
-  //  case 0:
-  //    spinStop();
-  //    break;
-  //  case 1://if we are close slow the heck down
-  //    rotationalMotorController.writeMicroseconds(rotaryStopMillis+100);
-  //    break;
-  //    case -1://if we are close slow the heck down
-  //    rotationalMotorController.writeMicroseconds(rotaryStopMillis-100);
-  //    break;
-  //  default: 
-  int addend = int(map(speed,-8,8, -rotarySpindesiredMagnitude, rotarySpindesiredMagnitude));
+  int addend = int(map(speed,-8,8, -rotarySpinDesiredMagnitude, rotarySpinDesiredMagnitude));
   addend = constrain(addend,-rotarySpinMaximumMagnitude,rotarySpinMaximumMagnitude);
   rotationalMotorController.writeMicroseconds(rotaryStopMillis+addend);
-
 }
+
 void spinClockwise(){
   rotationalMotorController.writeMicroseconds(rotaryClockwiseMillis);
 }

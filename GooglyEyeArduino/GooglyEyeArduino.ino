@@ -25,6 +25,8 @@ const int stepperSpeed = 600;  // trial and error detemrined this to be the best
 
 const int stepsPerRotation = 200;  // Our stepper is a 1.8 degree per step motor
 
+const long MAX_WAIT_MS = 10000;
+
 int hiLimitValue;  // state of linear limit switch
 int centerLimitValue;  // state of linear limit switch
 int lowLimitValue;  // state of linear limit switch
@@ -56,12 +58,34 @@ void loop() {
   //   stepper.moveTo(linearStepperGoal);
   // }
   // LINEAR
-  stepper.moveTo(hiLimitSteps);
+  
+  // stepper.moveTo(loLimitSteps);
+  // stepper.setSpeed(stepperSpeed);
+  // stepper.runSpeedToPosition();
+
+  int r = rand() % 3200 - 1600;
+  long theta = rand() % 9;
+
+  stepper.moveTo(r);
   stepper.setSpeed(stepperSpeed);
-  stepper.runSpeedToPosition();
-  // // ROTATIONAL
-  while(!spinTo(4)) {}
+
+  long start = millis();
+  while (true) {
+    if ((millis() - start) > MAX_WAIT_MS) {
+      break;
+    }
+
+    stepper.runSpeedToPosition();
+
+    bool hitR = stepper.currentPosition() == r;
+    bool hitTheta = spinTo(theta);
+
+    if (hitR && hitTheta) {
+      break;
+    }
+  }
 }
+
 
 ///Firmata Stuff!
 

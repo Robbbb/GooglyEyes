@@ -49,17 +49,23 @@ bool updateLinearLimits(){
 
 void linearHome(){
   Serial.print("Homing linear axis...");
+  stepper.moveTo(0);
   stepper.setSpeed( 1 * stepperSpeed);
-  //This blocking function sends the linear actulator to its home/origin
-  updateLinearLimits();
-  while(centerLimitValue != crossedBeam){//if it isn't centered already...
+
+  // This blocking function sends the linear actulator to its home/origin
+  
+  while (true) {  //if it isn't centered already...
     updateLinearLimits();
-    bounceAtLimits();//changes the speed to -thespeed if it hits a limit
+    if (centerLimitValue == crossedBeam) {
+      break;
+    }
+
+    bounceAtLimits();  // changes the speed to -thespeed if it hits a limit
     stepper.runSpeed();
   }
-  stepper.setCurrentPosition(0); //This is your home now, stepper
+
+  stepper.setCurrentPosition(0); // This is your home now, stepper
   Serial.println("Succeeded! Pupil at origin.");
-  stepper.stop();
 }
 
 void bounceAtLimits(){
