@@ -2,6 +2,7 @@ int sensorPins[] = {//the pins nos. for the hall effect sensor array
   2,4,5,6,7};
 
 const byte lookupTable[] = {
+  //This is the truth table for the wacky encoder we have on the rotary axis
   0b00101,
   0b00011,
   0b00001,
@@ -40,6 +41,7 @@ void rotaryHome(){
   // rotaryPositionMillis = 0;  
   Serial.println("Succeeded! rotary at origin.");
 }
+
 int cleanRotaryGoal(int goal, int reality){
   //if the fastest route is backwards, spit out the fastest route
   //remeber pupil, nearest exit may be behind you. 
@@ -77,7 +79,6 @@ boolean spinTo(int target){
 }
 
 
-
 const int rotaryStopMillis = 1500; //the pulse duration that stops the motor
 // const int rotarySpinDesiredMagnitude = 1000;//the greatest allowed distance from stop
 const int rotarySpinDesiredMagnitude = 1250;//the greatest allowed distance from stop
@@ -88,7 +89,7 @@ const int rotaryClockwiseMillis = rotaryStopMillis +rotaryDesiredSpeed;
 const int rotaryCounterClockwiseMillis = rotaryStopMillis -rotaryDesiredSpeed;
 
 void spinAt(int speed){
-
+//Takes a speed from -8 to 8, and does a wacky linear mapping so it is proportionally faster the further away form its goal it is.
   int addend = int(map(speed,-8,8, -rotarySpinDesiredMagnitude, rotarySpinDesiredMagnitude));
   addend = constrain(addend,-rotarySpinMaximumMagnitude,rotarySpinMaximumMagnitude);
   rotationalMotorController.writeMicroseconds(rotaryStopMillis+addend);
@@ -105,19 +106,23 @@ void spinStop(){
 }
 
 int HallArrayIdentifier(){
-  byte reading = 0;
-  for (int i = 0; i < 5; i++) {
+  //returns the rotational index of the rotational axis
+  const int sensorQty = 5;
+  const int positionQty = 16;
+  byte reading = 0;//populate the byte with zero(s)
+
+  for (int i = 0; i < sensorQty; i++) {
     int pin = sensorPins[i];
-    if (digitalRead(pin) == LOW) {
-      reading |= (1 << i);
+    if (digitalRead(pin) == LOW) {//sensors are active Low
+      reading |= (1 << i);//adding 1 to the reading with bitwise magic
     }
   }
 
   if (reading == 0) {
-    return -1;  //no hits, floating
+    return -1;  //no hits, floating between encoder steps
   } 
 
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < positionQty; i++) {
     if (reading != lookupTable[i]) {
       continue;
     }
@@ -126,10 +131,10 @@ int HallArrayIdentifier(){
     }
 
     lastKnownSpinPosition = i;
-    return i;
+    return i;//found a real position! spit it out.
   }
 
-  return -1;  //no hits
+  return -1;  //no hits, or sensor problem
 }
 
 
@@ -140,16 +145,10 @@ boolean checkForFalseHits(int spinPositionCandidate){
   {
     return false;
   }
-  // if suspected index found, make sure it is in reason
+  // if suspected index found, make sure it is within reason
   //while eye is spinning, sometimes not all hall sensors in array have settled on state at the same time, check that new vals make sense
-
-    // if (lastKnownSpinPosition==16) return true;//coming from center
-  // if (abs(lastKnownSpinPosition-spinPositionCandidate) >= 1) return true;
-  //delta cand+known should be 1 or less
-  // if (abs(lastKnownSpinPosition-spinPositionCandidate) == 15) return true;
   return true;
 }
-
 
 void hallArraySetup(){
   //The Hall effect sensors are active low, meaning the absensce of a magnet casues a zero reading
@@ -159,10 +158,6 @@ void hallArraySetup(){
   pinMode(6, INPUT);
   pinMode(7, INPUT); 
 }
-
-
-
-
 
 
 boolean testCleanRotaryGoal(){
@@ -193,12 +188,3 @@ boolean testCleanRotaryGoal(){
   else  Serial.println("failed!");
   Serial.println("Passed!");
 }
-
-
-
-
-
-
-
-
-

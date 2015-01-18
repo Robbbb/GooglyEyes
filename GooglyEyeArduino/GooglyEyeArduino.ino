@@ -25,7 +25,7 @@ const int stepperSpeed = 600;  // trial and error detemrined this to be the best
 
 const int stepsPerRotation = 200;  // Our stepper is a 1.8 degree per step motor
 
-const long MAX_WAIT_MS = 10000;
+const long MAX_WAIT_MS = 10000; //number of milliseconds after which to give up on a move command
 
 int hiLimitValue;  // state of linear limit switch
 int centerLimitValue;  // state of linear limit switch
@@ -49,57 +49,79 @@ void setup() {
   rotaryHome();
 }
 
+
 void loop() {
   if (!updateLinearLimits()) {  // returns false when limit is tripped
     linearHome();  // if the carriage hits a limit switch, it is not properly zeroed and should be zero'd again. 
   }
+
+  danceRandom(10000);
+  scream(2000);
+  // while(true){}
   // while (Firmata.available()) {  // if it gets a command from firmata, it does what it is supposed to do
   //   Firmata.processInput();
   //   stepper.moveTo(linearStepperGoal);
   // }
   // LINEAR
-  
+
   // stepper.moveTo(loLimitSteps);
   // stepper.setSpeed(stepperSpeed);
   // stepper.runSpeedToPosition();
 
-  int r = rand() % 3200 - 1600;
-  long theta = rand() % 9;
+}
 
+void danceRandom(int duration) {
+  //Dances to a random coordinate and for random durations and does so for a random duration
+  long start = millis();
+
+  long r;
+  int theta;
+
+  bool gotThere = true;
+
+  while(millis()-start < duration) {
+    if (gotThere) {
+      r = random(loLimitSteps,hiLimitSteps);
+      theta = random(0,8);
+    }
+
+    gotThere = moveTo(r, theta);
+  }
+}
+
+
+boolean moveTo(long r, int theta) {
+  //Returns true when goalsd are reached and false upon failure
   stepper.moveTo(r);
   stepper.setSpeed(stepperSpeed);
 
-  long start = millis();
-  while (true) {
-    if ((millis() - start) > MAX_WAIT_MS) {
-      break;
-    }
+  stepper.runSpeedToPosition();
 
-    stepper.runSpeedToPosition();
+  bool hitR = stepper.currentPosition() == r;
+  bool hitTheta = spinTo(theta);
 
-    bool hitR = stepper.currentPosition() == r;
-    bool hitTheta = spinTo(theta);
-
-    if (hitR && hitTheta) {
-      break;
-    }
-  }
+  return hitR && hitTheta;
 }
 
 
-///Firmata Stuff!
+// }
 
-void analogWriteCallback(byte pin, int value) {
-  int imaginaryPinUsedToRecieveScaledLinearGoal = 2;
-  int imaginaryPinUsedToRecieveRotaryGoal = 3;
 
-  if (pin == imaginaryPinUsedToRecieveScaledLinearGoal) {
-    linearStepperGoal = map(value, 0, 360, loLimitSteps, hiLimitSteps);
-  }
-  if (pin == imaginaryPinUsedToRecieveRotaryGoal) {
-    rotaryPositionGoal = value;
-  }
-}
+///Firmata Stuff
+
+//Uncomment if you are controlling from a computer
+
+// void analogWriteCallback(byte pin, int value) {
+//   int imaginaryPinUsedToRecieveScaledLinearGoal = 2;
+//   int imaginaryPinUsedToRecieveRotaryGoal = 3;
+
+//   if (pin == imaginaryPinUsedToRecieveScaledLinearGoal) {
+//     linearStepperGoal = map(value, 0, 360, loLimitSteps, hiLimitSteps);
+//   }
+//   if (pin == imaginaryPinUsedToRecieveRotaryGoal) {
+//     rotaryPositionGoal = value;
+//   }
+// }
 
 // void firmataFakeAnalogSetup() {
 //   Firmata.setFirmwareVersion(0, 2);
@@ -109,3 +131,4 @@ void analogWriteCallback(byte pin, int value) {
 //   int imaginaryPinUsedToDifferentiateTheEyes = 0;
 //   Firmata.sendAnalog(imaginaryPinUsedToDifferentiateTheEyes, isLeftEye);
 // }
+

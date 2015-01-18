@@ -53,7 +53,7 @@ void linearHome(){
   stepper.setSpeed( 1 * stepperSpeed);
 
   // This blocking function sends the linear actulator to its home/origin
-  
+
   while (true) {  //if it isn't centered already...
     updateLinearLimits();
     if (centerLimitValue == crossedBeam) {
@@ -85,10 +85,6 @@ void bounceAtLimits(){
 }
 
 
-
-
-
-
 void enableStepper(){
   digitalWrite(pwmA, HIGH);//We are using AccelStepper, so we just enable at full tilt(5v)
   digitalWrite(pwmB, HIGH);
@@ -99,99 +95,21 @@ void disableStepper(){
   digitalWrite(pwmB, LOW);
 
 }
-/*
 
- All this stuff was a failed attempt I am not ready to abandon
- 
- 
- void sendLinearHome(){
- int home = 0;
- linearMoveTo(home);
- }
- 
- void scream(int duration){
- digitalWrite(pwmA, HIGH);//We are using AccelStepper, so we just enable at full tilt(5v)
- digitalWrite(pwmA, HIGH);
- //  digitalWrite(pwmB, HIGH);
- tone(pwmB, 5000, duration);
- delay(duration);
- digitalWrite(pwmB, HIGH);
- delay(duration);
- }
- 
- 
- void findAndPrintLimits(){
- Serial.println("Finding True Limits...");
- //This blocking function sends the linear actulator to its extents after it has been homed
- // while(updateLinearLimits()!=false){//this turns true as soon as it leaves the gate....
- while(linearMoveTo(hiLimitSteps)){
- }
- 
- Serial.println("break   while (linearMoveTo(hiLimitSteps)){");
- delay(2000);
- sendLinearHome();
- Serial.println("sent sendLinearHome");
- delay(2000);
- // while(updateLinearLimits()!=false){
- while(linearMoveTo(loLimitSteps)){
- }
- 
- sendLinearHome();
- Serial.println("Succeeded! Bounds Found.");
- }
- 
- boolean linearMoveTo(int target){
- boolean debug = false;
- if (debug){
- Serial.print("target:\t");
- Serial.print(target);
- Serial.print("\tstepper.currentPosition():\t");
- Serial.println(stepper.currentPosition());
- }
- //safely quickly silently moves the (homed) track to a goal. Target is in steps, -/+2400
- //  if (updateLinearLimits()==false){//if an edge switch is triped
- //    int collison = stepper.currentPosition();
- //    if (collison>0)
- //    {
- //      hiLimitSteps = collison;
- //      Serial.print("\thiLimitSteps:\t");
- //      Serial.println(hiLimitSteps);
- //    }
- //    else if (collison<0)
- //    {
- //      loLimitSteps = stepper.currentPosition();
- //      Serial.print("\tloLimitSteps:\t");
- //      Serial.println(loLimitSteps);
- //    }
- //    else{
- //      Serial.println("IMPOSSIBLE ERROR");
- //    }
- //
- //    Serial.print("Hit Limits at:\t");
- //    Serial.print(collison);
- //    Serial.print("\twhile heading toward:\t");
- //    Serial.println(target);
- //    //    while it thinks it is above its limit, keep it off. As soon as it thinks it is back at or below its limit,  
- //  }
- 
- if (hiLimitSteps<= stepper.currentPosition() || loLimitSteps >= stepper.currentPosition() ){//if it wants to go furhter than it can, shut it down until its goal is reaonable
- disableStepper();//this shuts off power. the library is none the wiser
- Serial.println("disableStepper");
- return false;
- }
- else{
- enableStepper();//if the goal goes back into the green, re-enable it
- Serial.println("enableStepper");
- // return false;
- //  else{
- stepper.moveTo(target);
- stepper.setSpeed(stepperSpeed);
- stepper.runSpeedToPosition();
- return true;
- //  }
- }
- }
- */
+
+void scream(int duration){
+  int freq = 500;
+  tone(12,freq);
+  delay(duration/4);
+  noTone(12);
+  delay(duration/4);
+  tone(12,freq);
+  delay(duration/4);
+  noTone(12);
+  delay(duration/4);
+}
+
+
 
 
 
