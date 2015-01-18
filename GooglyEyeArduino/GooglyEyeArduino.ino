@@ -27,6 +27,8 @@ const int stepsPerRotation = 200;  // Our stepper is a 1.8 degree per step motor
 
 const long MAX_WAIT_MS = 10000; //number of milliseconds after which to give up on a move command
 
+
+
 int hiLimitValue;  // state of linear limit switch
 int centerLimitValue;  // state of linear limit switch
 int lowLimitValue;  // state of linear limit switch
@@ -47,26 +49,51 @@ void setup() {
   linearHome();
   rotarySetup();
   rotaryHome();
+  scream(1);
+  pickRoutine();
+  scream(2);
 }
 
+void pickRoutine(){
+  // picks between the (blocking) eye movement routines and executes them
+  int selectionQty = 3;
+  int selection = random(selectionQty);
+  selection = 2;
+  int duration = random(2000,5000);
+    switch (selection) {
+    case 1:
+danceRandom(duration);
+      break;
+    case 2:
+    rollEyesOver(duration);
+      break;
+    // default: 
+
+  }
+}
 
 void loop() {
-  if (!updateLinearLimits()) {  // returns false when limit is tripped
-    linearHome();  // if the carriage hits a limit switch, it is not properly zeroed and should be zero'd again. 
-  }
 
-  danceRandom(10000);
-  scream(2000);
+
+  // danceRandom(10000);
+  // blockingGoHome();
+  // delay(500);
+  // // scream(4);
+  // delay(5000);
   // while(true){}
-  // while (Firmata.available()) {  // if it gets a command from firmata, it does what it is supposed to do
-  //   Firmata.processInput();
-  //   stepper.moveTo(linearStepperGoal);
-  // }
+
   // LINEAR
 
-  // stepper.moveTo(loLimitSteps);
-  // stepper.setSpeed(stepperSpeed);
-  // stepper.runSpeedToPosition();
+
+
+}
+
+void rollEyesOver(int duration) {
+while(!moveTo(hiLimitSteps,6)){}
+while(!moveTo(hiLimitSteps,11)){}
+while(!moveTo(hiLimitSteps,12)){}
+while(!moveTo(0,12)){}
+while(!moveTo(0,6)){}
 
 }
 
@@ -89,9 +116,16 @@ void danceRandom(int duration) {
   }
 }
 
+void blockingGoHome(){
+  while(!moveTo(0,6)){}
+}
 
 boolean moveTo(long r, int theta) {
   //Returns true when goalsd are reached and false upon failure
+
+    if (!updateLinearLimits()) {  // returns false when limit is tripped
+    linearHome();  // if the carriage hits a limit switch, it is not properly zeroed and should be zero'd again. 
+  }
   stepper.moveTo(r);
   stepper.setSpeed(stepperSpeed);
 
@@ -103,32 +137,53 @@ boolean moveTo(long r, int theta) {
   return hitR && hitTheta;
 }
 
+void scream(int beepQty){
+  //Beep the specified number of times using the stepper motor as a speaker
+  int duration = beepQty*500;
+  int freq = 500;
+  for (int i = 0; i < beepQty; ++i)
+  {
+  tone(12,freq);
+  delay(duration/beepQty);
+  noTone(12);
+  delay(duration/beepQty);
+  }
+}
 
-// }
+
 
 
 ///Firmata Stuff
 
-//Uncomment if you are controlling from a computer
+//Uncomment and edit if you are controlling from a computer
+/*
 
-// void analogWriteCallback(byte pin, int value) {
-//   int imaginaryPinUsedToRecieveScaledLinearGoal = 2;
-//   int imaginaryPinUsedToRecieveRotaryGoal = 3;
+void firmataLoop(){
+    while (Firmata.available()) {  // if it gets a command from firmata, it does what it is supposed to do
+    Firmata.processInput();
+    stepper.moveTo(linearStepperGoal);
+  }
 
-//   if (pin == imaginaryPinUsedToRecieveScaledLinearGoal) {
-//     linearStepperGoal = map(value, 0, 360, loLimitSteps, hiLimitSteps);
-//   }
-//   if (pin == imaginaryPinUsedToRecieveRotaryGoal) {
-//     rotaryPositionGoal = value;
-//   }
-// }
+}
 
-// void firmataFakeAnalogSetup() {
-//   Firmata.setFirmwareVersion(0, 2);
-//   Firmata.attach(ANALOG_MESSAGE, analogWriteCallback);
-//   Firmata.begin(57600);
-//   Serial.println("\tFirmata Begun.");
-//   int imaginaryPinUsedToDifferentiateTheEyes = 0;
-//   Firmata.sendAnalog(imaginaryPinUsedToDifferentiateTheEyes, isLeftEye);
-// }
+void analogWriteCallback(byte pin, int value) {
+  int imaginaryPinUsedToRecieveScaledLinearGoal = 2;
+  int imaginaryPinUsedToRecieveRotaryGoal = 3;
 
+  if (pin == imaginaryPinUsedToRecieveScaledLinearGoal) {
+    linearStepperGoal = map(value, 0, 360, loLimitSteps, hiLimitSteps);
+  }
+  if (pin == imaginaryPinUsedToRecieveRotaryGoal) {
+    rotaryPositionGoal = value;
+  }
+}
+
+void firmataFakeAnalogSetup() {
+  Firmata.setFirmwareVersion(0, 2);
+  Firmata.attach(ANALOG_MESSAGE, analogWriteCallback);
+  Firmata.begin(57600);
+  Serial.println("\tFirmata Begun.");
+  int imaginaryPinUsedToDifferentiateTheEyes = 0;
+  Firmata.sendAnalog(imaginaryPinUsedToDifferentiateTheEyes, isLeftEye);
+}
+*/

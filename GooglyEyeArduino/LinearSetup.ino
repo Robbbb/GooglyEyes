@@ -97,18 +97,6 @@ void disableStepper(){
 }
 
 
-void scream(int duration){
-  int freq = 500;
-  tone(12,freq);
-  delay(duration/4);
-  noTone(12);
-  delay(duration/4);
-  tone(12,freq);
-  delay(duration/4);
-  noTone(12);
-  delay(duration/4);
-}
-
 
 
 

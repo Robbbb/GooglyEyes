@@ -9,7 +9,7 @@ const byte lookupTable[] = {
   0b11111,
   0b01111,
   0b10111,
-  0b11011,  // (Home)
+  0b11011,  // (Home) (for right eye)
   0b11101,
   0b01011,
   0b10101,
@@ -31,14 +31,12 @@ void   rotarySetup(){
 void rotaryHome(){
   //A blocking function that brings the rotary thing home
   Serial.print("Homing roatry axis...");
+  int homePosition = 6;
 
-  //  while(HallArrayIdentifier()!= 6){
-  //    spinClockwise();
-  while(!spinTo(6)){
+  while(!spinTo(homePosition)){
   }  
 
   spinStop();
-  // rotaryPositionMillis = 0;  
   Serial.println("Succeeded! rotary at origin.");
 }
 
@@ -130,8 +128,15 @@ int HallArrayIdentifier(){
       continue;
     }
 
-    lastKnownSpinPosition = i;
-    return i;//found a real position! spit it out.
+    int spinPosition;
+
+    if (isLeftEye) {//left eye was built 15 or so degrees off of the right eye.
+      spinPosition = (i + 1)%16;
+    } else {
+    spinPosition = i;
+    }
+  lastKnownSpinPosition = spinPosition;
+  return spinPosition;//found a real position! spit it out.
   }
 
   return -1;  //no hits, or sensor problem
