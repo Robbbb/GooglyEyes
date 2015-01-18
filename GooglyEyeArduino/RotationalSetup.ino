@@ -1,7 +1,24 @@
 int sensorPins[] = {//the pins nos. for the hall effect sensor array 
   2,4,5,6,7};
 
-String lookupTable[16];//truth table for psuedo binary to position
+const byte lookupTable[] = {
+  0b00101,
+  0b00011,
+  0b00001,
+  0b11111,
+  0b01111,
+  0b10111,
+  0b11011,  // (Home)
+  0b11101,
+  0b01011,
+  0b10101,
+  0b10011,
+  0b11001,
+  0b00011,
+  0b00011,
+  0b10001,  // (AntiHome)
+  0b01001,
+};
 
 void   rotarySetup(){
   hallArraySetup();
@@ -121,53 +138,31 @@ void spinStop(){
 }
 
 int HallArrayIdentifier(){
-  //By Amanda, moderately modified
-  // if (stepper.currentPosition()>1)
-  // {
-  //   lastKnownLateralPosition = 1;
-  // } 
-  // else if (stepper.currentPosition()<1)
-  // {
-  //   lastKnownLateralPosition = -1;
-  // } 
-  // else{
-  //   lastKnownLateralPosition = 0;
-  // }
-
-  //identifies theposition and returns it. If unknown, returns -1. Expected bounds are -1 to 16
-
-  String sensorData = "";//empty string to be filled with binary positions
+  byte reading = 0;
   for (int i = 0; i < 5; i++) {
-    // HallEffectControl *control = _hallSensorControllers[i];
-    boolean hit =  digitalRead(sensorPins[i]);
-    if (hit) {
-      sensorData = sensorData + "0";
-    } 
-    else {
-      sensorData = sensorData + "1";
+    int pin = sensorPins[i];
+    if (digitalRead(pin) == LOW) {
+      reading |= (1 << i);
     }
   }
-  //  Serial.print("\tRaw:  "); Serial.println(sensorData);
-  if (sensorData.compareTo("00000")==0) {
-    return -1;//no hits, floating
+
+  if (reading == 0) {
+    return -1;  //no hits, floating
   } 
-  else {//hits!!
-    for (int i = 0; i<16; i++) {
-      if (sensorData.equals(lookupTable[i])) {
-        if (!checkForFalseHits(i)) continue;//back to the top, incrementing i?
-        lastKnownSpinPosition = i;
-        // if (lastKnownLateralPosition==-1){//This is complicated polar math we can ignore
-        //   int oppPosition = i+8;//um mod much?
-        //   if (oppPosition>15) return oppPosition-16;
-        //   return oppPosition;
-        // } 
-        // else if (lastKnownLateralPosition==1){
-        return i;
-        //}
-      }
+
+  for (int i = 0; i < 16; i++) {
+    if (reading != lookupTable[i]) {
+      continue;
     }
+    if (!checkForFalseHits(i)) {
+      continue;
+    }
+
+    lastKnownSpinPosition = i;
+    return i;
   }
-  return -1;//no hits
+
+  return -1;  //no hits
 }
 
 
@@ -196,26 +191,6 @@ void hallArraySetup(){
   pinMode(5, INPUT);
   pinMode(6, INPUT);
   pinMode(7, INPUT); 
-  //Store the physical pattern of the magnets in our wacky encoder
-
-  lookupTable[0]  = "10100";//   00 - OXXXX
-  lookupTable[1]  = "11000";//   01 - OOXXX
-  lookupTable[2]  = "10000";//   02 - OXOXX
-  lookupTable[3]  = "11111";//   03 - OXXOX
-  lookupTable[4]  = "11110";//   04 - OXXXO
-  lookupTable[5]  = "11101";//  105 - OOOXX
-  lookupTable[6]  = "11011";//   06 - OXOOX//HOME
-  lookupTable[7]  = "10111";//   07 - OXXOO
-  lookupTable[8]  = "11010";//   08 - OOXXO
-  lookupTable[9]  = "10101";//   09 - OXOXO
-  lookupTable[10] = "11001";//   10 - OOXOX
-  lookupTable[11] = "10011";//   11 - OXOOO
-  lookupTable[12] = "00110";//   12 - OOXOO
-  lookupTable[13] = "01100";//   13 - OOOXO
-  lookupTable[14] = "10001";//   14 - OOOOX//AntiHome== -Home
-  lookupTable[15] = "10010";//   15 - XOOOX
-
-
 }
 
 
