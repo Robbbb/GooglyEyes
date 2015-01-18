@@ -10,7 +10,7 @@
 AccelStepper stepper(AccelStepper::FULL2WIRE, 12, 13);  // initialize a two-wire stepper on pins 12 and 13
 Servo rotationalMotorController;  // initialize our "servo", actually a Parralx
 
-const boolean isLeftEye = true;  // The two eyes are different.
+const boolean isLeftEye = false;  // The two eyes are different.
 
 const int pwmA = 3;  // On Motor Shield, PWM control pins
 const int pwmB = 11;
@@ -42,6 +42,9 @@ int rotaryPositionGoal = 6;
 int rotaryPositionMillis;
 int lastKnownSpinPosition = -1;  // was 6 a moment ago
 int lastKnownLateralPosition = 0;  // always known!
+
+int spinThetaGoal = 6;
+boolean thetaGoalReached = false;
 
 void setup() {
   // firmataFakeAnalogSetup();
@@ -91,8 +94,8 @@ void loop() {
 void rollEyesOver(int duration) {
 while(!moveTo(hiLimitSteps,6)){}
 while(!moveTo(hiLimitSteps,11)){}
-while(!moveTo(hiLimitSteps,12)){}
-while(!moveTo(0,12)){}
+while(!moveTo(hiLimitSteps,14)){}
+while(!moveTo(0,14)){}
 while(!moveTo(0,6)){}
 
 }
@@ -120,6 +123,8 @@ void blockingGoHome(){
   while(!moveTo(0,6)){}
 }
 
+
+
 boolean moveTo(long r, int theta) {
   //Returns true when goalsd are reached and false upon failure
 
@@ -130,11 +135,11 @@ boolean moveTo(long r, int theta) {
   stepper.setSpeed(stepperSpeed);
 
   stepper.runSpeedToPosition();
-
-  bool hitR = stepper.currentPosition() == r;
-  bool hitTheta = spinTo(theta);
-
-  return hitR && hitTheta;
+  boolean hitR = stepper.currentPosition() == r;
+  if(   spinTo(theta)){
+    thetaGoalReached = true;
+  }
+  return hitR && thetaGoalReached;
 }
 
 void scream(int beepQty){

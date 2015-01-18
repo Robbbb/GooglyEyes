@@ -57,15 +57,24 @@ int cleanRotaryGoal(int goal, int reality){
 
 
 boolean spinTo(int target){
+  //sets new goals
+  
+  if (target != spinThetaGoal){
+  thetaGoalReached = false;
+}
+  spinThetaGoal = target; 
+
+  // spinThetaGoal
+  // if spin is due, spin appropriately
   HallArrayIdentifier();//detect hits on hall array
   if (lastKnownSpinPosition == -1)spinClockwise();//if it doesn't know where it is, spin it
-  if(lastKnownSpinPosition == target){
+  if(lastKnownSpinPosition == spinThetaGoal){
     spinStop();
     return true;
   }
   int totalPositions = 16;
 
-  int fastestRotaryRoute = cleanRotaryGoal(target,lastKnownSpinPosition);
+  int fastestRotaryRoute = cleanRotaryGoal(spinThetaGoal,lastKnownSpinPosition);
   if(fastestRotaryRoute == 0){
     spinStop();
     return true;
@@ -75,7 +84,6 @@ boolean spinTo(int target){
 
   return false;
 }
-
 
 const int rotaryStopMillis = 1500; //the pulse duration that stops the motor
 // const int rotarySpinDesiredMagnitude = 1000;//the greatest allowed distance from stop
