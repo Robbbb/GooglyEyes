@@ -53,8 +53,9 @@ void setup() {
   rotarySetup();
   rotaryHome();
   scream(1);
-  pickRoutine();
-  scream(2);
+  // pickRoutine();
+
+  // scream(2);
 }
 
 void pickRoutine(){
@@ -78,7 +79,7 @@ danceRandom(duration);
 void loop() {
 
 
-  // danceRandom(10000);
+  danceRandom(10000);
   // blockingGoHome();
   // delay(500);
   // // scream(4);
@@ -111,7 +112,7 @@ void danceRandom(int duration) {
 
   while(millis()-start < duration) {
     if (gotThere) {
-      r = random(loLimitSteps,hiLimitSteps);
+      r = random(int(hiLimitSteps*0.2),hiLimitSteps);
       theta = random(0,8);
     }
 
