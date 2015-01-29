@@ -6,11 +6,15 @@
 // #include <Firmata.h>  // Easiest most reilable way to move values from computer to Arduino
 #include <AccelStepper.h>  // A great absolute and non-blocking stepper contro library
 #include <Servo.h>  // Used to send servo-type signals to the DC motor controller
+#include <wire.h> //used for communication between the eyes.
+
 
 AccelStepper stepper(AccelStepper::FULL2WIRE, 12, 13);  // initialize a two-wire stepper on pins 12 and 13
 Servo rotationalMotorController;  // initialize our "servo", actually a Parralx
 
 const boolean isLeftEye = false;  // The two eyes are different.
+
+const boolean master = isLeftEye;  // one eye makes decisions and the other follows
 
 const int pwmA = 3;  // On Motor Shield, PWM control pins
 const int pwmB = 11;
@@ -127,7 +131,7 @@ void blockingGoHome(){
 
 
 boolean moveTo(long r, int theta) {
-  //Returns true when goalsd are reached and false upon failure
+  //Returns true when goals are reached and false upon failure
 
     if (!updateLinearLimits()) {  // returns false when limit is tripped
     linearHome();  // if the carriage hits a limit switch, it is not properly zeroed and should be zero'd again. 
@@ -147,12 +151,13 @@ void scream(int beepQty){
   //Beep the specified number of times using the stepper motor as a speaker
   int duration = beepQty*500;
   int freq = 500;
+  int pinToBeep = 12;
   for (int i = 0; i < beepQty; ++i)
   {
-  tone(12,freq);
-  delay(duration/beepQty);
-  noTone(12);
-  delay(duration/beepQty);
+    tone(pinToBeep,freq);
+    delay(duration/beepQty);
+    noTone(pinToBeep);
+    delay(duration/beepQty);
   }
 }
 

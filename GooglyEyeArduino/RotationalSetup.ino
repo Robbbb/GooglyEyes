@@ -1,6 +1,6 @@
 int sensorPins[] = {//the pins nos. for the hall effect sensor array 
   2,4,5,6,7};
-
+ 
 const byte lookupTable[] = {
   //This is the truth table for the wacky encoder we have on the rotary axis
   0b00101,

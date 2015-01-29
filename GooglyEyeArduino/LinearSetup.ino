@@ -1,3 +1,4 @@
+//TODO change pins so i2c can be used
 
 void linearSetup(){
   //Runs once. Prepares motor driver to move linear stepper.
