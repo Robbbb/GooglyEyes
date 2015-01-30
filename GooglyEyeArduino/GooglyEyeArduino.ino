@@ -6,15 +6,14 @@
 // #include <Firmata.h>  // Easiest most reilable way to move values from computer to Arduino
 #include <AccelStepper.h>  // A great absolute and non-blocking stepper contro library
 #include <Servo.h>  // Used to send servo-type signals to the DC motor controller
-#include <wire.h> //used for communication between the eyes.
+#include <Wire.h>
 
 
 AccelStepper stepper(AccelStepper::FULL2WIRE, 12, 13);  // initialize a two-wire stepper on pins 12 and 13
 Servo rotationalMotorController;  // initialize our "servo", actually a Parralx
 
-const boolean isLeftEye = false;  // The two eyes are different.
-
-const boolean master = isLeftEye;  // one eye makes decisions and the other follows
+const boolean isLeftEye = true;  // The two eyes are different.
+const boolean isMaster = isLeftEye;  // The two eyes are different.
 
 const int pwmA = 3;  // On Motor Shield, PWM control pins
 const int pwmB = 11;
@@ -30,7 +29,6 @@ const int stepperSpeed = 600;  // trial and error detemrined this to be the best
 const int stepsPerRotation = 200;  // Our stepper is a 1.8 degree per step motor
 
 const long MAX_WAIT_MS = 10000; //number of milliseconds after which to give up on a move command
-
 
 
 int hiLimitValue;  // state of linear limit switch
@@ -52,11 +50,24 @@ boolean thetaGoalReached = false;
 
 void setup() {
   // firmataFakeAnalogSetup();
-  linearSetup();
-  linearHome();
-  rotarySetup();
-  rotaryHome();
-  scream(1);
+  Serial.begin(9600);
+  if(isLeftEye)Serial.print("Left Eye. ");
+  else Serial.print("Right Eye. ");
+
+  if(isMaster)Serial.print("Master. ");
+  else Serial.print("Slave. ");
+
+  if (isMaster) {
+    i2cMasterSetup();
+    i2cMasterTest();
+  }
+  else i2cSlaveSetup();
+
+  //  linearSetup();
+  //  linearHome();
+  //  rotarySetup();
+  //  rotaryHome();
+  //  scream(1);
   // pickRoutine();
 
   // scream(2);
@@ -68,13 +79,13 @@ void pickRoutine(){
   int selection = random(selectionQty);
   selection = 2;
   int duration = random(2000,5000);
-    switch (selection) {
-    case 1:
-danceRandom(duration);
-      break;
-    case 2:
+  switch (selection) {
+  case 1:
+    danceRandom(duration);
+    break;
+  case 2:
     rollEyesOver(duration);
-      break;
+    break;
     // default: 
 
   }
@@ -82,8 +93,10 @@ danceRandom(duration);
 
 void loop() {
 
-
-  danceRandom(10000);
+  //Serial.print("loop ");
+  delay(100);
+  parsei2cString();
+  // danceRandom(10000);
   // blockingGoHome();
   // delay(500);
   // // scream(4);
@@ -97,11 +110,16 @@ void loop() {
 }
 
 void rollEyesOver(int duration) {
-while(!moveTo(hiLimitSteps,6)){}
-while(!moveTo(hiLimitSteps,11)){}
-while(!moveTo(hiLimitSteps,14)){}
-while(!moveTo(0,14)){}
-while(!moveTo(0,6)){}
+  while(!moveTo(hiLimitSteps,6)){
+  }
+  while(!moveTo(hiLimitSteps,11)){
+  }
+  while(!moveTo(hiLimitSteps,14)){
+  }
+  while(!moveTo(0,14)){
+  }
+  while(!moveTo(0,6)){
+  }
 
 }
 
@@ -125,15 +143,16 @@ void danceRandom(int duration) {
 }
 
 void blockingGoHome(){
-  while(!moveTo(0,6)){}
+  while(!moveTo(0,6)){
+  }
 }
 
 
 
 boolean moveTo(long r, int theta) {
-  //Returns true when goals are reached and false upon failure
+  //Returns true when goalsd are reached and false upon failure
 
-    if (!updateLinearLimits()) {  // returns false when limit is tripped
+  if (!updateLinearLimits()) {  // returns false when limit is tripped
     linearHome();  // if the carriage hits a limit switch, it is not properly zeroed and should be zero'd again. 
   }
   stepper.moveTo(r);
@@ -151,12 +170,11 @@ void scream(int beepQty){
   //Beep the specified number of times using the stepper motor as a speaker
   int duration = beepQty*500;
   int freq = 500;
-  int pinToBeep = 12;
   for (int i = 0; i < beepQty; ++i)
   {
-    tone(pinToBeep,freq);
+    tone(12,freq);
     delay(duration/beepQty);
-    noTone(pinToBeep);
+    noTone(12);
     delay(duration/beepQty);
   }
 }
@@ -169,32 +187,36 @@ void scream(int beepQty){
 //Uncomment and edit if you are controlling from a computer
 /*
 
-void firmataLoop(){
-    while (Firmata.available()) {  // if it gets a command from firmata, it does what it is supposed to do
-    Firmata.processInput();
-    stepper.moveTo(linearStepperGoal);
-  }
+ void firmataLoop(){
+ while (Firmata.available()) {  // if it gets a command from firmata, it does what it is supposed to do
+ Firmata.processInput();
+ stepper.moveTo(linearStepperGoal);
+ }
+ 
+ }
+ 
+ void analogWriteCallback(byte pin, int value) {
+ int imaginaryPinUsedToRecieveScaledLinearGoal = 2;
+ int imaginaryPinUsedToRecieveRotaryGoal = 3;
+ 
+ if (pin == imaginaryPinUsedToRecieveScaledLinearGoal) {
+ linearStepperGoal = map(value, 0, 360, loLimitSteps, hiLimitSteps);
+ }
+ if (pin == imaginaryPinUsedToRecieveRotaryGoal) {
+ rotaryPositionGoal = value;
+ }
+ }
+ 
+ void firmataFakeAnalogSetup() {
+ Firmata.setFirmwareVersion(0, 2);
+ Firmata.attach(ANALOG_MESSAGE, analogWriteCallback);
+ Firmata.begin(57600);
+ Serial.println("\tFirmata Begun.");
+ int imaginaryPinUsedToDifferentiateTheEyes = 0;
+ Firmata.sendAnalog(imaginaryPinUsedToDifferentiateTheEyes, isLeftEye);
+ }
+ */
 
-}
 
-void analogWriteCallback(byte pin, int value) {
-  int imaginaryPinUsedToRecieveScaledLinearGoal = 2;
-  int imaginaryPinUsedToRecieveRotaryGoal = 3;
 
-  if (pin == imaginaryPinUsedToRecieveScaledLinearGoal) {
-    linearStepperGoal = map(value, 0, 360, loLimitSteps, hiLimitSteps);
-  }
-  if (pin == imaginaryPinUsedToRecieveRotaryGoal) {
-    rotaryPositionGoal = value;
-  }
-}
 
-void firmataFakeAnalogSetup() {
-  Firmata.setFirmwareVersion(0, 2);
-  Firmata.attach(ANALOG_MESSAGE, analogWriteCallback);
-  Firmata.begin(57600);
-  Serial.println("\tFirmata Begun.");
-  int imaginaryPinUsedToDifferentiateTheEyes = 0;
-  Firmata.sendAnalog(imaginaryPinUsedToDifferentiateTheEyes, isLeftEye);
-}
-*/
