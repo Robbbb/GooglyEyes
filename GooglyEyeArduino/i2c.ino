@@ -1,26 +1,27 @@
+#include <Servo.h>  // Used to send servo-type signals to the DC motor controller
+#include <Wire.h>   //Wire is a library for I2C communiction. We are using it to send data between arduinos.
 
-void i2cSlaveSetup(){
+void i2cSlaveSetup() {
   Serial.print("i2cSlaveSetup...");
-  Wire.begin(4); // join i2c bus (address optional for master)
-  Wire.onReceive(receiveEvent); // register event
+  Wire.begin(4);                 // join i2c bus (address optional for master)
+  Wire.onReceive(receiveEvent);  // register event
   Serial.println("Complete.");
 }
 
-void i2cMasterSetup(){
+void i2cMasterSetup() {
   Serial.print("i2cMasterSetup...");
   delay(1000);
   Wire.begin();
   Serial.println("Complete.");
 }
 
+// String intToStringBuffer;
 
-// String intToStringBuffer;  
-
-void sendPositionToI2c(int thetaToSend, int rToSend){
-  //builds a constant lenght string containing the theta and radius params
-  //format style: "T+00016R-15555X"
+void sendPositionToI2c(int thetaToSend, int rToSend) {
+  // builds a constant lenght string containing the theta and radius params
+  // format style: "T+00016R-15555X"
   boolean debug = true;
-  if(debug){
+  if (debug) {
     Serial.print("moving to rToSend:\t");
     Serial.print(rToSend);
     Serial.print("\tand thetaToSend:\t");
@@ -31,16 +32,16 @@ void sendPositionToI2c(int thetaToSend, int rToSend){
   // intToString(thetaToSend);
   stringToSend += intToString(thetaToSend);
   stringToSend += "R";
-  stringToSend +=   intToString(rToSend);
+  stringToSend += intToString(rToSend);
   stringToSend += "X";
   Serial.print("Attempting to send over i2c:\t");
   Serial.println(stringToSend);
   char charBuf[15];
   stringToSend.toCharArray(charBuf, 15);
 
-  Wire.beginTransmission(4); // transmit to device #4
-  Wire.write(charBuf);              // sends 15 byte s 
-  Wire.endTransmission();    // stop transmitting
+  Wire.beginTransmission(4);  // transmit to device #4
+  Wire.write(charBuf);        // sends 15 byte s
+  Wire.endTransmission();     // stop transmitting
 
   Serial.println("sendPositionToI2c executed");
 }
@@ -48,39 +49,40 @@ void sendPositionToI2c(int thetaToSend, int rToSend){
 String eyeCoordStringCandidate = "";
 
 void receiveEvent(int howMany)
-//Automatically called by Wire library when a i2c packet is recieved
+// Automatically called by Wire library when a i2c packet is recieved
 {
   eyeCoordStringCandidate = "";
-  //a blocking function that collects all the data from the other board
-  while( Wire.available()) // loop through all 
+  // a blocking function that collects all the data from the other board
+  while (Wire.available())  // loop through all
   {
-    char inChar = Wire.read(); // receive byte as a character
+    char inChar = Wire.read();  // receive byte as a character
     eyeCoordStringCandidate += inChar;
   }
 }
 
-void parsei2cString(){
-  //error checks global eyeCoordStringCandidate and sets variables if it is valid
+void parsei2cString() {
+  // error checks global eyeCoordStringCandidate and sets variables if it is
+  // valid
   // Serial.println("parsei2cString...");
-  if(eyeCoordStringCandidate.length()==0)return; //quit if it is blank
+  if (eyeCoordStringCandidate.length() == 0)
+    return;  // quit if it is blank
   Serial.print("parsing: ");
   Serial.println(eyeCoordStringCandidate);
   String eyeCoordString = "";
-  boolean rightLegnth = eyeCoordStringCandidate.length() ==14;
-  boolean rightBegin = eyeCoordStringCandidate.charAt(0) == 'T';//T for Theta
-  boolean rightEnd = eyeCoordStringCandidate.charAt(7) == 'R';  //R for radius
-  if (rightLegnth && rightBegin && rightEnd){
+  boolean rightLegnth = eyeCoordStringCandidate.length() == 14;
+  boolean rightBegin = eyeCoordStringCandidate.charAt(0) == 'T';  // T for Theta
+  boolean rightEnd = eyeCoordStringCandidate.charAt(7) == 'R';  // R for radius
+  if (rightLegnth && rightBegin && rightEnd) {
     // Serial.println("eyeCoordStringCandidate passed all tests!");
     eyeCoordString = eyeCoordStringCandidate;
-    eyeCoordStringCandidate= "";//blank the old one
-    spinThetaGoal = eyeCoordString.substring(1,1+6).toInt();
-    linearStepperGoal =  eyeCoordString.substring(8,8+6).toInt();
+    eyeCoordStringCandidate = "";  // blank the old one
+    spinThetaGoal = eyeCoordString.substring(1, 1 + 6).toInt();
+    linearStepperGoal = eyeCoordString.substring(8, 8 + 6).toInt();
     Serial.print("theta: ");
     Serial.println(spinThetaGoal);
     Serial.print("r: ");
     Serial.println(linearStepperGoal);
-  }
-  else{
+  } else {
     Serial.println("Recieved bad string over i2c...");
     Serial.println(eyeCoordStringCandidate);
     Serial.print("eyeCoordStringCandidate.length():  ");
@@ -93,16 +95,10 @@ void parsei2cString(){
   }
 }
 
-
-
-
-
-
-
-
 /*
 String intToString(int intToConvert){
-  //Takes an intToConvert and formats it into a robust and unabiguous signed string of constant lenght range is -32,768 to +32,768
+  //Takes an intToConvert and formats it into a robust and unabiguous signed
+string of constant lenght range is -32,768 to +32,768
   String stringToReturn = "";
   if(intToConvert >= 0) stringToReturn += '+';
   else stringToReturn+= '-';
@@ -141,21 +137,20 @@ void testIntToString(){
 
 }
 */
-void i2cMasterTest(){
-  //Sends a trio of example commands to tet the protocol and the parsing
+void i2cMasterTest() {
+  // Sends a trio of example commands to tet the protocol and the parsing
   Serial.println("i2cMasterTest...");
   delay(3000);
   Serial.println("begin");
   int delayAmt = 500;
   Serial.println("sendPositionToI2c(0,0);...");
-  sendPositionToI2c(0,0);
+  sendPositionToI2c(0, 0);
   delay(delayAmt);
   Serial.println("sendPositionToI2c(16,1400);");
-  sendPositionToI2c(16,1400);
+  sendPositionToI2c(16, 1400);
   delay(delayAmt);
   Serial.println("sendPositionToI2c(8,-1400);");
-  sendPositionToI2c(8,-1400);
+  sendPositionToI2c(8, -1400);
   delay(delayAmt);
   Serial.println("Complete.");
 }
-
