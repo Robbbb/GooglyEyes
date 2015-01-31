@@ -1,6 +1,6 @@
 int sensorPins[] = {//the pins nos. for the hall effect sensor array 
   2,4,5,6,7};
- 
+
 const byte lookupTable[] = {
   //This is the truth table for the wacky encoder we have on the rotary axis
   0b00101,
@@ -58,10 +58,10 @@ int cleanRotaryGoal(int goal, int reality){
 
 boolean spinTo(int target){
   //sets new goals
-  
+
   if (target != spinThetaGoal){
-  thetaGoalReached = false;
-}
+    thetaGoalReached = false;
+  }
   spinThetaGoal = target; 
 
   // spinThetaGoal
@@ -72,7 +72,7 @@ boolean spinTo(int target){
     spinStop();
     return true;
   }
-  int totalPositions = 16;
+  // int totalPositions = 16;
 
   int fastestRotaryRoute = cleanRotaryGoal(spinThetaGoal,lastKnownSpinPosition);
   if(fastestRotaryRoute == 0){
@@ -95,7 +95,7 @@ const int rotaryClockwiseMillis = rotaryStopMillis +rotaryDesiredSpeed;
 const int rotaryCounterClockwiseMillis = rotaryStopMillis -rotaryDesiredSpeed;
 
 void spinAt(int speed){
-//Takes a speed from -8 to 8, and does a wacky linear mapping so it is proportionally faster the further away form its goal it is.
+  //Takes a speed from -8 to 8, and does a wacky linear mapping so it is proportionally faster the further away form its goal it is.
   int addend = int(map(speed,-8,8, -rotarySpinDesiredMagnitude, rotarySpinDesiredMagnitude));
   addend = constrain(addend,-rotarySpinMaximumMagnitude,rotarySpinMaximumMagnitude);
   rotationalMotorController.writeMicroseconds(rotaryStopMillis+addend);
@@ -140,11 +140,12 @@ int HallArrayIdentifier(){
 
     if (isLeftEye) {//left eye was built 15 or so degrees off of the right eye.
       spinPosition = (i + 1)%16;
-    } else {
-    spinPosition = i;
+    } 
+    else {
+      spinPosition = i;
     }
-  lastKnownSpinPosition = spinPosition;
-  return spinPosition;//found a real position! spit it out.
+    lastKnownSpinPosition = spinPosition;
+    return spinPosition;//found a real position! spit it out.
   }
 
   return -1;  //no hits, or sensor problem
@@ -173,7 +174,7 @@ void hallArraySetup(){
 }
 
 
-boolean testCleanRotaryGoal(){
+void testCleanRotaryGoal(){
   Serial.print("testCleanRotaryGoal...");
   if (cleanRotaryGoal(0,1)       == -1)             Serial.println("(cleanRotaryGoal(0,1)       == -1) ");
   else  Serial.println("failed!");
@@ -201,3 +202,4 @@ boolean testCleanRotaryGoal(){
   else  Serial.println("failed!");
   Serial.println("Passed!");
 }
+
