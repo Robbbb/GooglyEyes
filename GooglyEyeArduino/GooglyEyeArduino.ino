@@ -40,7 +40,7 @@ long hiLimitSteps = 1600;  // maximum linear steps from origin we can reasonably
 // expect before tripping a limit switch
 long loLimitSteps = -1600;
 
-long linearStepperGoal = 0;
+int16_t linearStepperGoal = 0;
 long lastR;
 int lastTheta;
 
@@ -49,7 +49,7 @@ int rotaryPositionMillis;
 int lastKnownSpinPosition = -1;    // was 6 a moment ago
 int lastKnownLateralPosition = 0;  // always known!
 
-int spinThetaGoal = 6;
+int16_t spinThetaGoal = 6;
 boolean thetaGoalReached = false;
 
 void setup() {
@@ -67,10 +67,7 @@ void setup() {
   else
     Serial.print("Right Eye. ");
 
-  if (isMaster)
-    i2cMasterSetup();
-  else
-    i2cSlaveSetup();
+  i2cSetup(isMaster);
 
   //  linearSetup();
   //  linearHome();
@@ -88,7 +85,6 @@ void loop() {
     danceRandom(1000);
   } else  // is slave
   {
-    parsei2cString();
     moveTo(linearStepperGoal, spinThetaGoal);
   }
   // // danceRandom(10000);
@@ -136,9 +132,9 @@ void testIntToString() {
 
 void pickRoutine() {
   // picks between the (blocking) eye movement routines and executes them
-  int selectionQty = 3;
-  int selection = random(selectionQty);
-  selection = 2;
+  // int selectionQty = 3;
+  // int selection = random(selectionQty);
+  int selection = 2;
   int duration = random(2000, 5000);
   switch (selection) {
     case 1:
@@ -198,13 +194,11 @@ boolean moveTo(long r, int theta) {
   //   Serial.println(theta);
   // }
 
-  boolean newR = (r != lastR);  // new if different
-  boolean newTheta = (theta != lastTheta);
   lastR = r;
   lastTheta = theta;
   if (isMaster)  //&& (newR || newTheta))
   {
-    sendPositionToI2c(theta, int(r));  // Send same instructions to other eye
+    i2cSendPosition(theta, r);  // Send same instructions to other eye
   }
 
   if (!updateLinearLimits()) {  // returns false when limit is tripped

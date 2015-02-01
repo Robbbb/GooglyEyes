@@ -9,27 +9,42 @@
 
 // This example code is in the public domain.
 
-
 #include <Wire.h>
 
-void setup()
-{
+void setup() {
   Serial.begin(9600);
-  Wire.begin(); // join i2c bus (address optional for master)
-      Serial.println("Master writer, bare minumum");         // print the integer
-
+  Wire.begin();  // join i2c bus (address optional for master)
+  Serial.println("Master writer, bare minumum");  // print the integer
 }
 
-byte x = 0;
+void i2cWriteShort(short data) {
+  int8_t lo = (data >> 0) & 0xFF;
+  int8_t hi = (data >> 8) & 0xFF;
 
-void loop()
-{
-  Wire.beginTransmission(4); // transmit to device #4
-  Wire.write("T+00015R+00999X");        // sends five bytes
-  Serial.println("SENDING T+00015R+00999X ....");
-//  Wire.write(x);              // sends one byte  
-  Wire.endTransmission();    // stop transmitting
+  Wire.write(hi);
+  Wire.write(lo);
+}
 
-  x++;
+int i = -128;
+
+void loop() {
   delay(500);
+
+  Wire.beginTransmission(4);  // transmit to device #4
+
+  i2cWriteShort(i);
+  i++;
+
+  i2cWriteShort(i);
+  i++;
+
+  int err = Wire.endTransmission();
+
+  if (err) {
+    Serial.print("error ");
+    Serial.println(err);
+    return;
+  }
+
+  Serial.println("sent");
 }
